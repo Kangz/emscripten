@@ -503,14 +503,27 @@ var LibraryDylink = {
         if (!flags.allowUndefined) {
           reportUndefinedSymbols();
         }
+
 #if STACK_OVERFLOW_CHECK >= 2
         moduleExports['__set_stack_limits']({{{ STACK_BASE }}} , {{{ STACK_MAX }}});
 #endif
+
+        // initialize the module
 #if USE_PTHREADS
-        // in a pthread the module heap was initialized in the main thread
-        if (!ENVIRONMENT_IS_PTHREAD) {
+        // The main thread does a full __post_instantiate (which includes a call
+        // to emscripten_tls_init), but secondard threads should not call static
+        // constrtuctors in general, only emscripten_tls_init.
+        if (ENVIRONMENT_IS_PTHREAD) {
+          init = moduleExports['emscripten_tls_init'];
+          assert(init);
+#if DYLINK_DEBUG
+          out("adding to tlsInitFunctions: " + init);
 #endif
-          // initialize the module
+          PThread.tlsInitFunctions.push(init);
+        } else
+
+#endif
+        {
           var init = moduleExports['__post_instantiate'];
           if (init) {
             if (runtimeInitialized) {
@@ -520,9 +533,7 @@ var LibraryDylink = {
               __ATINIT__.push(init);
             }
           }
-#if USE_PTHREADS
         }
-#endif
         return moduleExports;
       }
 
