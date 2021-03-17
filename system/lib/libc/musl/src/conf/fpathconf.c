@@ -14,7 +14,7 @@ long fpathconf(int fd, int name)
 		[_PC_CHOWN_RESTRICTED] = 1,
 		[_PC_NO_TRUNC] = 1,
 		[_PC_VDISABLE] = 0,
-		[_PC_SYNC_IO] = 1,
+		[_PC_SYNC_IO] = -1, // XXX EMSCRIPTEN replace -1
 		[_PC_ASYNC_IO] = -1,
 		[_PC_PRIO_IO] = -1,
 		[_PC_SOCK_MAXBUF] = -1,
